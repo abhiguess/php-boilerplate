@@ -271,7 +271,9 @@ All API endpoints return JSON with consistent format:
 { "success": true, "message": "Success", "data": { ... } }
 ```
 
-### Users API
+All resource API endpoints require a Bearer token. Get one via `POST /api/login` first.
+
+### Users API (requires Bearer token)
 
 | Method | URL | Description |
 |---|---|---|
@@ -281,7 +283,7 @@ All API endpoints return JSON with consistent format:
 | `PUT` | `/api/users/{id}` | Update user |
 | `DELETE` | `/api/users/{id}` | Delete user |
 
-### Posts API
+### Posts API (requires Bearer token)
 
 | Method | URL | Description |
 |---|---|---|
@@ -345,27 +347,40 @@ Router::delete('/api/products/{id}',  [ProductApiController::class, 'destroy']);
 ### Test with curl
 
 ```bash
+# 1. Login to get token
+curl -X POST http://localhost:8000/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"john@example.com","password":"password"}'
+# → { "data": { "user": {...}, "token": "your-token-here" } }
+
+# 2. Use token for all subsequent requests
 # List users
-curl http://localhost:8000/api/users
+curl http://localhost:8000/api/users \
+  -H "Authorization: Bearer your-token-here"
 
 # Get user with posts
-curl http://localhost:8000/api/users/1
+curl http://localhost:8000/api/users/1 \
+  -H "Authorization: Bearer your-token-here"
 
 # Filter posts
-curl http://localhost:8000/api/posts?user_id=1&status=published
+curl "http://localhost:8000/api/posts?user_id=1&status=published" \
+  -H "Authorization: Bearer your-token-here"
 
 # Create user (JSON body)
 curl -X POST http://localhost:8000/api/users \
+  -H "Authorization: Bearer your-token-here" \
   -H "Content-Type: application/json" \
   -d '{"name":"Test User","email":"test@example.com"}'
 
 # Update user
 curl -X PUT http://localhost:8000/api/users/1 \
+  -H "Authorization: Bearer your-token-here" \
   -H "Content-Type: application/json" \
   -d '{"name":"Updated Name","email":"updated@example.com"}'
 
 # Delete user
-curl -X DELETE http://localhost:8000/api/users/1
+curl -X DELETE http://localhost:8000/api/users/1 \
+  -H "Authorization: Bearer your-token-here"
 ```
 
 ## Validation Rules

@@ -6,6 +6,7 @@ class UserApiController extends ApiController
 
     public function __construct()
     {
+        Auth::requireToken();
         $this->user = new User();
     }
 

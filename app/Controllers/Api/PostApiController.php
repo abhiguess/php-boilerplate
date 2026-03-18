@@ -6,6 +6,7 @@ class PostApiController extends ApiController
 
     public function __construct()
     {
+        Auth::requireToken();
         $this->post = new Post();
     }
 
