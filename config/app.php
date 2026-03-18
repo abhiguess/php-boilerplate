@@ -129,3 +129,87 @@ function verifyCsrf(): bool
     $token = $_POST['_csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
     return hash_equals(csrfToken(), $token);
 }
+
+/**
+ * Handle file upload
+ *
+ * @param string $field    - Form field name (e.g., 'image', 'avatar')
+ * @param string $folder   - Subfolder inside public/uploads/ (e.g., 'users', 'posts')
+ * @param array  $allowed  - Allowed extensions
+ * @param int    $maxSize  - Max file size in bytes (default 5MB)
+ * @return string|null     - Relative path to saved file, or null on failure
+ */
+function uploadFile(
+    string $field,
+    string $folder = '',
+    array $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    int $maxSize = 5 * 1024 * 1024
+): ?string {
+    if (empty($_FILES[$field]) || $_FILES[$field]['error'] !== UPLOAD_ERR_OK) {
+        return null;
+    }
+
+    $file = $_FILES[$field];
+
+    // Validate size
+    if ($file['size'] > $maxSize) {
+        return null;
+    }
+
+    // Validate extension
+    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    if (!in_array($ext, $allowed)) {
+        return null;
+    }
+
+    // Validate MIME type (security: don't trust extension alone)
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mime = finfo_file($finfo, $file['tmp_name']);
+    finfo_close($finfo);
+
+    $allowedMimes = [
+        'jpg'  => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'png'  => 'image/png',
+        'gif'  => 'image/gif',
+        'webp' => 'image/webp',
+        'pdf'  => 'application/pdf',
+        'doc'  => 'application/msword',
+        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'mp4'  => 'video/mp4',
+    ];
+
+    if (isset($allowedMimes[$ext]) && $mime !== $allowedMimes[$ext]) {
+        return null;
+    }
+
+    // Generate unique filename
+    $filename = uniqid() . '_' . time() . '.' . $ext;
+
+    // Create folder if needed
+    $uploadDir = __DIR__ . '/../public/uploads/' . ($folder ? $folder . '/' : '');
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0755, true);
+    }
+
+    // Move file
+    $destination = $uploadDir . $filename;
+    if (!move_uploaded_file($file['tmp_name'], $destination)) {
+        return null;
+    }
+
+    // Return relative path (for storing in DB and displaying in views)
+    return 'uploads/' . ($folder ? $folder . '/' : '') . $filename;
+}
+
+/**
+ * Delete an uploaded file
+ */
+function deleteFile(?string $path): void
+{
+    if (!$path) return;
+    $fullPath = __DIR__ . '/../public/' . $path;
+    if (file_exists($fullPath)) {
+        unlink($fullPath);
+    }
+}
