@@ -33,5 +33,23 @@ Router::put('/posts/{id}',         [PostController::class, 'update']);
 Router::post('/posts/{id}/delete', [PostController::class, 'destroy']);
 
 // -------------------------------------------------------
+// API Routes (JSON only)
+// -------------------------------------------------------
+
+// Users API
+Router::get('/api/users',          [UserApiController::class, 'index']);
+Router::get('/api/users/{id}',     [UserApiController::class, 'show']);
+Router::post('/api/users',         [UserApiController::class, 'store']);
+Router::put('/api/users/{id}',     [UserApiController::class, 'update']);
+Router::delete('/api/users/{id}',  [UserApiController::class, 'destroy']);
+
+// Posts API
+Router::get('/api/posts',          [PostApiController::class, 'index']);
+Router::get('/api/posts/{id}',     [PostApiController::class, 'show']);
+Router::post('/api/posts',         [PostApiController::class, 'store']);
+Router::put('/api/posts/{id}',     [PostApiController::class, 'update']);
+Router::delete('/api/posts/{id}',  [PostApiController::class, 'destroy']);
+
+// -------------------------------------------------------
 // Add your routes below
 // -------------------------------------------------------

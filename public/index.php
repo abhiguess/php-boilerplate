@@ -31,6 +31,7 @@ spl_autoload_register(function (string $class) {
     $paths = [
         __DIR__ . '/../core/',
         __DIR__ . '/../app/Controllers/',
+        __DIR__ . '/../app/Controllers/Api/',
         __DIR__ . '/../app/Models/',
     ];
 

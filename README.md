@@ -54,11 +54,13 @@ php-boilerplate/
 │   ├── Router.php            # GET/POST/PUT/DELETE routing with {param} support
 │   ├── Request.php           # Input handling (POST, GET, JSON, files)
 │   ├── Response.php          # JSON responses (success/error)
-│   ├── Controller.php        # Base controller: view(), json(), redirect(), back()
-│   ├── Model.php             # Base model: all(), find(), where(), create(), update(), delete(), paginate()
+│   ├── Controller.php        # Base web controller: view(), json(), redirect(), back()
+│   ├── ApiController.php     # Base API controller: success(), error(), validate()
+│   ├── Model.php             # Base model: CRUD + hasMany, belongsTo, withJoin
 │   └── Validator.php         # Validation: required, email, min, max, unique, numeric, etc.
 ├── app/
-│   ├── Controllers/          # Your controllers go here
+│   ├── Controllers/          # Web controllers
+│   │   └── Api/              # API controllers (JSON only)
 │   ├── Models/               # Your models go here
 │   └── Views/
 │       └── layouts/main.php  # HTML layout (Tailwind + Alpine.js via CDN)
@@ -180,6 +182,114 @@ Copy from `app/Views/users/` and modify fields.
 | `delete($id)` | Delete by ID |
 | `count($conditions)` | Count records |
 | `paginate($page, $perPage)` | Paginated results |
+| `hasMany($table, $fk, $id)` | One-to-many relation |
+| `belongsTo($table, $foreignId)` | Inverse relation |
+| `withJoin($table, $fk, ...)` | LEFT JOIN with extras |
+
+## REST API
+
+All API endpoints return JSON with consistent format:
+
+```json
+{ "success": true, "message": "Success", "data": { ... } }
+```
+
+### Users API
+
+| Method | URL | Description |
+|---|---|---|
+| `GET` | `/api/users` | List all (`?page=1&per_page=10` for pagination) |
+| `GET` | `/api/users/{id}` | Get user with their posts |
+| `POST` | `/api/users` | Create user |
+| `PUT` | `/api/users/{id}` | Update user |
+| `DELETE` | `/api/users/{id}` | Delete user |
+
+### Posts API
+
+| Method | URL | Description |
+|---|---|---|
+| `GET` | `/api/posts` | List all (`?user_id=1&status=published` to filter) |
+| `GET` | `/api/posts/{id}` | Get post with author |
+| `POST` | `/api/posts` | Create post |
+| `PUT` | `/api/posts/{id}` | Update post |
+| `DELETE` | `/api/posts/{id}` | Delete post |
+
+### Example: Adding a Product API
+
+Create `app/Controllers/Api/ProductApiController.php`:
+
+```php
+<?php
+
+class ProductApiController extends ApiController
+{
+    private Product $product;
+
+    public function __construct()
+    {
+        $this->product = new Product();
+    }
+
+    public function index(): void
+    {
+        $this->success($this->product->all());
+    }
+
+    public function show(string $id): void
+    {
+        $product = $this->product->find($id);
+        if (!$product) $this->notFound();
+        $this->success($product);
+    }
+
+    public function store(): void
+    {
+        $data = Request::only(['name', 'price']);
+        $this->validate($data, [
+            'name'  => 'required|min:2',
+            'price' => 'required|numeric|min_value:0',
+        ]);
+        $id = $this->product->create($data);
+        $this->created($this->product->find($id));
+    }
+}
+```
+
+Add routes in `routes.php`:
+
+```php
+Router::get('/api/products',          [ProductApiController::class, 'index']);
+Router::get('/api/products/{id}',     [ProductApiController::class, 'show']);
+Router::post('/api/products',         [ProductApiController::class, 'store']);
+Router::put('/api/products/{id}',     [ProductApiController::class, 'update']);
+Router::delete('/api/products/{id}',  [ProductApiController::class, 'destroy']);
+```
+
+### Test with curl
+
+```bash
+# List users
+curl http://localhost:8000/api/users
+
+# Get user with posts
+curl http://localhost:8000/api/users/1
+
+# Filter posts
+curl http://localhost:8000/api/posts?user_id=1&status=published
+
+# Create user (JSON body)
+curl -X POST http://localhost:8000/api/users \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test User","email":"test@example.com"}'
+
+# Update user
+curl -X PUT http://localhost:8000/api/users/1 \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Updated Name","email":"updated@example.com"}'
+
+# Delete user
+curl -X DELETE http://localhost:8000/api/users/1
+```
 
 ## Validation Rules
 
