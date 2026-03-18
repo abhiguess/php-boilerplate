@@ -14,6 +14,7 @@
         <nav class="bg-gray-800 text-white rounded-lg px-5 py-3 mb-6 flex items-center gap-6">
             <a href="<?= baseUrl('/') ?>" class="font-bold text-lg hover:text-gray-300 transition"><?= e(env('APP_NAME', 'PHP App')) ?></a>
             <a href="<?= baseUrl('/users') ?>" class="text-gray-300 hover:text-white transition">Users</a>
+            <a href="<?= baseUrl('/posts') ?>" class="text-gray-300 hover:text-white transition">Posts</a>
         </nav>
 
         <!-- Flash Messages -->

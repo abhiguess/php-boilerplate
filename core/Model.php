@@ -120,6 +120,54 @@ class Model
     }
 
     /**
+     * hasMany — get related records from another table
+     * Usage: $user->hasMany('posts', 'user_id', $userId)
+     */
+    public function hasMany(string $table, string $foreignKey, int|string $id, string $orderBy = 'id DESC'): array
+    {
+        return Database::query(
+            "SELECT * FROM $table WHERE $foreignKey = ? ORDER BY $orderBy",
+            [$id]
+        );
+    }
+
+    /**
+     * belongsTo — get parent record from another table
+     * Usage: $post->belongsTo('users', $post['user_id'])
+     */
+    public function belongsTo(string $table, int|string $foreignId): ?array
+    {
+        return Database::queryOne(
+            "SELECT * FROM $table WHERE id = ?",
+            [$foreignId]
+        );
+    }
+
+    /**
+     * withJoin — get records with a joined parent table
+     * Usage: $post->withJoin('users', 'user_id', 'id', ['users.name as user_name'])
+     */
+    public function withJoin(
+        string $joinTable,
+        string $foreignKey,
+        string $ownerKey = 'id',
+        array $selectExtra = [],
+        string $orderBy = ''
+    ): array {
+        $select = "{$this->table}.*";
+        if ($selectExtra) {
+            $select .= ', ' . implode(', ', $selectExtra);
+        }
+        $orderBy = $orderBy ?: "{$this->table}.id DESC";
+
+        return Database::query(
+            "SELECT $select FROM {$this->table}
+             LEFT JOIN $joinTable ON {$this->table}.$foreignKey = $joinTable.$ownerKey
+             ORDER BY $orderBy"
+        );
+    }
+
+    /**
      * Simple pagination
      */
     public function paginate(int $page = 1, int $perPage = 10, string $orderBy = 'id DESC'): array

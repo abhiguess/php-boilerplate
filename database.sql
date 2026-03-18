@@ -12,7 +12,24 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at DATETIME DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Posts table (belongsTo User)
+CREATE TABLE IF NOT EXISTS posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    body TEXT NOT NULL,
+    status ENUM('draft', 'published') DEFAULT 'draft',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Insert sample data
 INSERT INTO users (name, email, phone) VALUES
 ('John Doe', 'john@example.com', '1234567890'),
 ('Jane Smith', 'jane@example.com', '0987654321');
+
+INSERT INTO posts (user_id, title, body, status) VALUES
+(1, 'Getting Started with PHP', 'PHP is a popular server-side scripting language suited for web development. In this post we explore the basics.', 'published'),
+(1, 'Understanding MVC Pattern', 'Model-View-Controller is a design pattern that separates application logic into three components.', 'published'),
+(2, 'My Draft Post', 'This is still a work in progress and not yet ready for publishing.', 'draft');
