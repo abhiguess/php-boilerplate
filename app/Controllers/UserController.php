@@ -6,6 +6,7 @@ class UserController extends Controller
 
     public function __construct()
     {
+        Auth::requireLogin();
         $this->user = new User();
     }
 

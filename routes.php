@@ -4,6 +4,15 @@
  * Define all application routes here
  */
 
+// -------------------------------------------------------
+// Auth Routes (guest only)
+// -------------------------------------------------------
+Router::get('/login',     [AuthController::class, 'loginForm']);
+Router::post('/login',    [AuthController::class, 'login']);
+Router::get('/register',  [AuthController::class, 'registerForm']);
+Router::post('/register', [AuthController::class, 'register']);
+Router::post('/logout',   [AuthController::class, 'logout']);
+
 // Home
 Router::get('/', function () {
     $ctrl = new class extends Controller {
@@ -14,6 +23,10 @@ Router::get('/', function () {
     };
     $ctrl->index();
 });
+
+// -------------------------------------------------------
+// Protected Web Routes (require login)
+// -------------------------------------------------------
 
 // Users CRUD
 Router::get('/users',              [UserController::class, 'index']);
@@ -35,6 +48,14 @@ Router::post('/posts/{id}/delete', [PostController::class, 'destroy']);
 // -------------------------------------------------------
 // API Routes (JSON only)
 // -------------------------------------------------------
+
+// Auth API (public)
+Router::post('/api/login',    [AuthApiController::class, 'login']);
+Router::post('/api/register', [AuthApiController::class, 'register']);
+
+// Auth API (token required)
+Router::get('/api/me',        [AuthApiController::class, 'me']);
+Router::post('/api/logout',   [AuthApiController::class, 'logout']);
 
 // Users API
 Router::get('/api/users',          [UserApiController::class, 'index']);

@@ -1,6 +1,6 @@
 # PHP Boilerplate
 
-A minimal PHP MVC boilerplate with routing, database (PDO), validation, and Tailwind + Alpine.js frontend. No framework, no Composer — just clean PHP 8+.
+A minimal PHP MVC boilerplate with routing, database (PDO), validation, authentication, and Tailwind + Alpine.js frontend. No framework, no Composer — just clean PHP 8+.
 
 ## Quick Start
 
@@ -30,6 +30,8 @@ Import `database.sql` via phpMyAdmin, HeidiSQL, or CLI:
 mysql -u root -p < database.sql
 ```
 
+Sample login: `john@example.com` / `password`
+
 ### 3. Run the App
 
 **PHP built-in server:**
@@ -54,16 +56,20 @@ php-boilerplate/
 │   ├── Router.php            # GET/POST/PUT/DELETE routing with {param} support
 │   ├── Request.php           # Input handling (POST, GET, JSON, files)
 │   ├── Response.php          # JSON responses (success/error)
+│   ├── Auth.php              # Authentication: login, register, session, API tokens
 │   ├── Controller.php        # Base web controller: view(), json(), redirect(), back()
 │   ├── ApiController.php     # Base API controller: success(), error(), validate()
 │   ├── Model.php             # Base model: CRUD + hasMany, belongsTo, withJoin
 │   └── Validator.php         # Validation: required, email, min, max, unique, numeric, etc.
 ├── app/
-│   ├── Controllers/          # Web controllers
+│   ├── Controllers/          # Web controllers (AuthController, UserController, etc.)
 │   │   └── Api/              # API controllers (JSON only)
 │   ├── Models/               # Your models go here
 │   └── Views/
-│       └── layouts/main.php  # HTML layout (Tailwind + Alpine.js via CDN)
+│       ├── auth/             # Login & register views
+│       ├── layouts/main.php  # HTML layout (Tailwind + Alpine.js via CDN)
+│       ├── users/            # User CRUD views
+│       └── posts/            # Post CRUD views
 ├── routes.php                # All route definitions
 ├── database.sql              # DB schema + sample data
 ├── .env                      # Environment config
@@ -154,6 +160,77 @@ Router::post('/products/{id}/delete', [ProductController::class, 'destroy']);
 ### 5. Create Views — `app/Views/products/`
 
 Copy from `app/Views/users/` and modify fields.
+
+## Authentication
+
+Built-in session-based auth (web) and Bearer token auth (API).
+
+### Web Routes
+
+| Method | URL | Description |
+|---|---|---|
+| `GET` | `/login` | Login form |
+| `POST` | `/login` | Login handler |
+| `GET` | `/register` | Register form |
+| `POST` | `/register` | Register handler |
+| `POST` | `/logout` | Logout |
+
+### API Auth Routes
+
+| Method | URL | Auth | Description |
+|---|---|---|---|
+| `POST` | `/api/login` | Public | Returns `{ user, token }` |
+| `POST` | `/api/register` | Public | Returns `{ user, token }` |
+| `GET` | `/api/me` | Bearer token | Get current user |
+| `POST` | `/api/logout` | Bearer token | Invalidate token |
+
+### Auth Helper Methods
+
+| Method | Description |
+|---|---|
+| `Auth::attempt($email, $pass)` | Verify credentials & login |
+| `Auth::register($data)` | Hash password & create user |
+| `Auth::login($user)` / `Auth::logout()` | Session management |
+| `Auth::check()` / `Auth::guest()` | Check login state |
+| `Auth::user()` / `Auth::id()` | Get current user / ID |
+| `Auth::fresh()` | Get full user from DB |
+| `Auth::requireLogin()` | Redirect to `/login` if guest (web) |
+| `Auth::requireAuth()` | Return 401 if guest (API) |
+| `Auth::requireToken()` | Require Bearer token (API) |
+| `Auth::generateToken($userId)` | Generate API token |
+
+### Protecting Routes
+
+**Web controllers** — add to constructor:
+
+```php
+public function __construct()
+{
+    Auth::requireLogin();
+}
+```
+
+**API controllers** — add to constructor or individual methods:
+
+```php
+public function __construct()
+{
+    Auth::requireToken();
+}
+```
+
+### API Token Usage
+
+```bash
+# Login to get token
+curl -X POST http://localhost:8000/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"john@example.com","password":"password"}'
+
+# Use token in subsequent requests
+curl http://localhost:8000/api/me \
+  -H "Authorization: Bearer <your-token>"
+```
 
 ## Available Helpers
 

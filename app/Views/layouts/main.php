@@ -11,10 +11,24 @@
     <div class="max-w-4xl mx-auto px-4 py-6">
 
         <!-- Navbar -->
-        <nav class="bg-gray-800 text-white rounded-lg px-5 py-3 mb-6 flex items-center gap-6">
-            <a href="<?= baseUrl('/') ?>" class="font-bold text-lg hover:text-gray-300 transition"><?= e(env('APP_NAME', 'PHP App')) ?></a>
-            <a href="<?= baseUrl('/users') ?>" class="text-gray-300 hover:text-white transition">Users</a>
-            <a href="<?= baseUrl('/posts') ?>" class="text-gray-300 hover:text-white transition">Posts</a>
+        <nav class="bg-gray-800 text-white rounded-lg px-5 py-3 mb-6 flex items-center justify-between">
+            <div class="flex items-center gap-6">
+                <a href="<?= baseUrl('/') ?>" class="font-bold text-lg hover:text-gray-300 transition"><?= e(env('APP_NAME', 'PHP App')) ?></a>
+                <a href="<?= baseUrl('/users') ?>" class="text-gray-300 hover:text-white transition">Users</a>
+                <a href="<?= baseUrl('/posts') ?>" class="text-gray-300 hover:text-white transition">Posts</a>
+            </div>
+            <div class="flex items-center gap-4">
+                <?php if (Auth::check()): ?>
+                    <span class="text-sm text-gray-300"><?= e(Auth::user()['name']) ?></span>
+                    <form method="POST" action="<?= baseUrl('/logout') ?>" class="inline">
+                        <?= csrfField() ?>
+                        <button class="text-sm text-gray-400 hover:text-white transition">Logout</button>
+                    </form>
+                <?php else: ?>
+                    <a href="<?= baseUrl('/login') ?>" class="text-sm text-gray-300 hover:text-white transition">Login</a>
+                    <a href="<?= baseUrl('/register') ?>" class="text-sm bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md transition">Register</a>
+                <?php endif; ?>
+            </div>
         </nav>
 
         <!-- Flash Messages -->

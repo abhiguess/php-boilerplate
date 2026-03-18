@@ -7,6 +7,7 @@ class PostController extends Controller
 
     public function __construct()
     {
+        Auth::requireLogin();
         $this->post = new Post();
         $this->user = new User();
     }
